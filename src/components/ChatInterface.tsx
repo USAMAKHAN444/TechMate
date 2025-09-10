@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Plus, Trash2, Settings, MessageSquare, Bot, User, Upload, Save, Bookmark, Loader2 } from 'lucide-react';
+import { Send, Plus, Trash2, MessageSquare, Bot, User, Upload, Save, Bookmark, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,7 +9,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/hooks/use-toast';
-import SettingsPanel from './SettingsPanel';
 
 interface Message {
   id: string;
@@ -29,8 +28,7 @@ const ChatInterface = () => {
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [backendUrl, setBackendUrl] = useState('https://d8dc01c05ae5.ngrok-free.app');
+  const [backendUrl] = useState('https://techmate-stage.vertekx.com');
   const [isLoadingChats, setIsLoadingChats] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [savingStates, setSavingStates] = useState<{[key: string]: boolean}>({});
@@ -50,7 +48,6 @@ const ChatInterface = () => {
   const makeRequest = async (url: string, options: RequestInit = {}) => {
     const headers = {
       'Content-Type': 'application/json',
-      'ngrok-skip-browser-warning': 'true',
       ...options.headers
     };
 
@@ -107,20 +104,10 @@ const ChatInterface = () => {
     }
   }, [backendUrl, isLoadingChats]);
 
-  // Load chats only once when component mounts or backend URL changes
-  useEffect(() => {
-    const savedUrl = localStorage.getItem('chatapp_backend_url');
-    if (savedUrl && savedUrl !== backendUrl) {
-      setBackendUrl(savedUrl);
-    } else {
-      loadChats();
-    }
-  }, []);
-
-  // Load chats when backend URL changes
+  // Load chats when component mounts
   useEffect(() => {
     loadChats();
-  }, [backendUrl]);
+  }, []);
 
   const currentChat = chats.find(chat => chat.id === currentChatId);
 
@@ -268,9 +255,6 @@ const ChatInterface = () => {
 
       const response = await fetch(`${backendUrl}/upload_documents/`, {
         method: 'POST',
-        headers: {
-          'ngrok-skip-browser-warning': 'true'
-        },
         body: formData,
         mode: 'cors'
       });
@@ -440,10 +424,6 @@ const ChatInterface = () => {
     }
   };
 
-  const handleUrlChange = useCallback((url: string) => {
-    setBackendUrl(url);
-    localStorage.setItem('chatapp_backend_url', url);
-  }, []);
 
   return (
     <div className="h-screen flex bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -455,14 +435,6 @@ const ChatInterface = () => {
               <Bot className="w-6 h-6" />
               TeachMate-AI
             </h1>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowSettings(true)}
-              className="text-white hover:bg-white/20"
-            >
-              <Settings className="w-4 h-4" />
-            </Button>
           </div>
           <Button
             onClick={createNewChat}
@@ -734,13 +706,6 @@ const ChatInterface = () => {
         )}
       </div>
 
-      {/* Settings Panel */}
-      <SettingsPanel
-        isOpen={showSettings}
-        onClose={() => setShowSettings(false)}
-        backendUrl={backendUrl}
-        onUrlChange={handleUrlChange}
-      />
     </div>
   );
 };
